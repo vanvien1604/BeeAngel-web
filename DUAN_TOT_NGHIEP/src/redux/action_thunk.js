@@ -554,14 +554,22 @@ export function createStaff(
         gender,
         birth_day,
       });
-      console.log("create staff data", res.data);
 
+      console.log("create staff data", res.data);
       return res.data;
     } catch (error) {
-      console.log(error.response.data.message);
+      // Kiểm tra lỗi và dispatch thông báo lỗi về frontend
+      if (error.response && error.response.status === 400) {
+        console.log("Error response data:", error.response.data);
+        dispatch(errUser(error.response.data.message)); // Lấy thông báo lỗi từ backend
+      } else {
+        console.error("Unexpected error:", error);
+        dispatch(errUser("Có lỗi xảy ra, vui lòng thử lại!"));
+      }
     }
   };
 }
+
 
 // get all user by role
 export function getAllUserByRole(role) {

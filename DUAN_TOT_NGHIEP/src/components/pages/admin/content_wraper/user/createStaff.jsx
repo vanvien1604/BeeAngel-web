@@ -3,11 +3,13 @@ import { useForm } from "react-hook-form";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createStaff } from "../../../../../redux/action_thunk";
+import { errUser } from "../../../../../redux/user_slice";
 
-function AddEmployee() {
+const AddEmployee = () => {
   const [isPopupVisible, setPopupVisible] = useState(false);
+  const isErrUser = useSelector((state) => state.userSL.isErrUser); // Lấy lỗi từ Redux
   const {
     register,
     handleSubmit,
@@ -21,13 +23,15 @@ function AddEmployee() {
     if (isPopupVisible) {
       reset();
       setSuccessMessage("");
+      dispatch(errUser(null)); // Reset lỗi khi đóng popup
     }
   };
 
   const dispatch = useDispatch();
+
   const onSubmit = async (data) => {
     try {
-      await dispatch(
+      const result = await dispatch(
         createStaff(
           data.name,
           data.email,
@@ -43,37 +47,28 @@ function AddEmployee() {
         )
       );
 
-      setSuccessMessage("Thêm mới nhân viên thành công!");
-      reset();
+      if (result?.message === "Đăng ký tài khoản thành công.") {
+        setSuccessMessage(result.message);
+        reset();
+      }
     } catch (error) {
       console.error("Lỗi khi thêm nhân viên:", error);
-      setSuccessMessage("Thêm nhân viên thất bại!");
     }
   };
 
   return (
     <div>
-      <Button
-        onClick={handlePopup}
-        className="btn-add-manager"
-        variant="contained"
-        color="primary"
-      >
+      <Button className="mx-3" onClick={handlePopup} variant="contained" color="primary">
         Thêm nhân viên
       </Button>
 
       {isPopupVisible && (
         <>
-          <div className={`${isPopupVisible ? "overlay-admin" : ""}`}>
-            <div
-              className={`box-popop-addtour ${
-                isPopupVisible ? "showPopup-addtour" : "nonePopup-addtour"
-              }`}
-            >
+          <div className="overlay-admin">
+            <div className={`box-popop-addtour showPopup-addtour`}>
               <h2>Thêm Mới Nhân Viên</h2>
-              {successMessage && (
-                <Alert severity="success">{successMessage}</Alert>
-              )}
+              {successMessage && <Alert severity="success">{successMessage}</Alert>}
+              {isErrUser && <Alert severity="error">{isErrUser}</Alert>}
               <form onSubmit={handleSubmit(onSubmit)}>
                 <TextField
                   {...register("name", {
@@ -101,9 +96,9 @@ function AddEmployee() {
                 />
                 <TextField
                   {...register("password", {
-                    required: "password không được bỏ trống",
+                    required: "Password không được bỏ trống",
                   })}
-                  label="password"
+                  label="Password"
                   fullWidth
                   margin="normal"
                   error={!!errors.password}
@@ -132,6 +127,7 @@ function AddEmployee() {
       )}
     </div>
   );
-}
+};
+
 
 export default AddEmployee;
